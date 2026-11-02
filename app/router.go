@@ -1,7 +1,7 @@
 package app
 
 import (
-	"stokeria/controllers"
+	"stokeria/controller"
 	"stokeria/repository"
 	"stokeria/service"
 
