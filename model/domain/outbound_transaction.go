@@ -2,7 +2,7 @@ package domain
 
 import (
 	"time"
-	"stokeria/helper"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +22,7 @@ type OutboundTransaction struct {
 
 func (o *OutboundTransaction) BeforeCreate(tx *gorm.DB) (err error) {
 	if o.ID == "" {
-		o.ID = helper.GenerateUUID()
+		o.ID = uuid.New().String()
 	}
 	return
 }

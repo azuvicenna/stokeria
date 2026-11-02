@@ -2,7 +2,7 @@ package domain
 
 import (
 	"time"
-	"stokeria/helper"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +24,7 @@ func (Inventory) TableName() string {
 
 func (i *Inventory) BeforeCreate(tx *gorm.DB) (err error) {
 	if i.ID == "" {
-		i.ID = helper.GenerateUUID()
+		i.ID = uuid.New().String()
 	}
 	return
 }

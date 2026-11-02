@@ -2,7 +2,7 @@ package domain
 
 import (
 	"time"
-	"stokeria/helper"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +21,7 @@ type Product struct {
 
 func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
 	if p.ID == "" {
-		p.ID = helper.GenerateUUID()
+		p.ID = uuid.New().String()
 	}
 	return
 }
