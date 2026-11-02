@@ -9,5 +9,6 @@ go get gorm.io/gorm
 go get gorm.io/driver/mysql
 go get github.com/golang-migrate/migrate/v4
 go get github.com/stretchr/testify
+go get github.com/google/uuid 
 go mod tidy
 ```

@@ -4,6 +4,7 @@ go 1.26.6
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.20.1
+	github.com/google/uuid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.21.0
 	gorm.io/driver/mysql v1.6.0
