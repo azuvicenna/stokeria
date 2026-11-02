@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS stock_adjustments;
+DROP TABLE IF EXISTS transaction_details;
+DROP TABLE IF EXISTS outbound_transactions;
+DROP TABLE IF EXISTS inbound_transactions;
+DROP TABLE IF EXISTS inventory;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS warehouses;
+DROP TABLE IF EXISTS suppliers;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS users;
