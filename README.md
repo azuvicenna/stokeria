@@ -11,4 +11,6 @@ go get github.com/golang-migrate/migrate/v4
 go get github.com/stretchr/testify
 go get github.com/google/uuid 
 go mod tidy
+go run main.go
+go run main.go -seed
 ```

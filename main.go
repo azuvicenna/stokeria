@@ -1,7 +1,9 @@
 package main
 
 import (
+	"flag"
 	"stokeria/app"
+	"stokeria/exception"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -12,9 +14,19 @@ func main(){
 	gormDB := app.NewDatabase(viperConfig, logrusLogger)
 	goValidator := app.NewValidator()
 
+	seedFlag := flag.Bool("seed", false, "Menjalankan database seeder")
+	flag.Parse()
+
+	if *seedFlag {
+		if err := app.RunSeeder(gormDB); err != nil {
+			logrusLogger.Fatalf("Seeder gagal dijalankan: %v", err)
+		}
+		logrusLogger.Info("Seeder berhasil dieksekusi!")
+		return
+	}
+
 	fiberApp := fiber.New(fiber.Config{
-		// Tambahkan custom error handler jika didefinisikan di direktori exception
-		// ErrorHandler: exception.ErrorHandler,
+		ErrorHandler: exception.ErrorHandler,
 	})
 
 	app.SetupRouter(fiberApp, gormDB, goValidator, logrusLogger)
