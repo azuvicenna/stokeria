@@ -1,1 +1,32 @@
+# Build & Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/stokeria
+/main
+
+# Environment Variables (Sangat Penting untuk Keamanan)
 .env
+.env.backup
+.env.production
+
+# Dependency Directories
+/vendor/
+
+# Go Workspace
+go.work
+go.work.sum
+
+# Logs
+*.log
+
+# IDE & OS Files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+.DS_Store
