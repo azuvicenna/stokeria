@@ -6,9 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	
-	// Sesuaikan path import ini dengan nama module di go.mod Anda
-	"stokeria/model/domain" 
+
+	"stokeria/model/domain"
 )
 
 func RunSeeder(db *gorm.DB) error {
@@ -23,7 +22,7 @@ func RunSeeder(db *gorm.DB) error {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New().String()
 		userIDs = append(userIDs, id)
-		users = append(users, domain.User{ID: id, Email: fmt.Sprintf("user%d@stokeria.com", i), PasswordHash: "hashed_password", Name: fmt.Sprintf("User %d", i), Role: "admin"})
+		users = append(users, domain.User{ID: id, Email: fmt.Sprintf("user%d@stokeria.com", i), PasswordHash: "$2a$10$7Z01yDkWwP14/dK2eQ9yEOm5H22b40J1Yq.uS3rO40Q35hJz19yC2", Name: fmt.Sprintf("User %d", i), Role: "admin"})
 	}
 	if err = db.Create(&users).Error; err != nil {
 		return err
@@ -87,7 +86,15 @@ func RunSeeder(db *gorm.DB) error {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New().String()
 		inboundIDs = append(inboundIDs, id)
-		inbounds = append(inbounds, domain.InboundTransaction{ID: id, ReferenceCode: fmt.Sprintf("INB-%04d", i), SupplierID: supplierIDs[i-1], UserID: userIDs[i-1], TransactionDate: now, Status: "completed"})
+		inbounds = append(inbounds, domain.InboundTransaction{
+			ID:              id,
+			ReferenceCode:   fmt.Sprintf("INB-%04d", i),
+			SupplierID:      supplierIDs[i-1],
+			WarehouseID:     warehouseIDs[i-1],
+			UserID:          userIDs[i-1],
+			TransactionDate: now,
+			Status:          "COMPLETED",
+		})
 	}
 	if err = db.Create(&inbounds).Error; err != nil {
 		return err
@@ -98,7 +105,15 @@ func RunSeeder(db *gorm.DB) error {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New().String()
 		outboundIDs = append(outboundIDs, id)
-		outbounds = append(outbounds, domain.OutboundTransaction{ID: id, ReferenceCode: fmt.Sprintf("OUT-%04d", i), Destination: "Tujuan Pengiriman", UserID: userIDs[i-1], TransactionDate: now, Status: "completed"})
+		outbounds = append(outbounds, domain.OutboundTransaction{
+			ID:              id,
+			ReferenceCode:   fmt.Sprintf("OUT-%04d", i),
+			WarehouseID:     warehouseIDs[i-1],
+			Destination:     "Tujuan Pengiriman",
+			UserID:          userIDs[i-1],
+			TransactionDate: now,
+			Status:          "COMPLETED",
+		})
 	}
 	if err = db.Create(&outbounds).Error; err != nil {
 		return err
@@ -107,13 +122,20 @@ func RunSeeder(db *gorm.DB) error {
 	// 9. Transaction Details
 	var details []domain.TransactionDetail
 	for i := 1; i <= 5; i++ {
-		transactionType := "inbound"
+		transactionType := "INBOUND"
 		transactionID := inboundIDs[i-1]
 		if i > 3 {
-			transactionType = "outbound"
+			transactionType = "OUTBOUND"
 			transactionID = outboundIDs[i-1]
 		}
-		details = append(details, domain.TransactionDetail{ID: uuid.New().String(), TransactionID: transactionID, TransactionType: transactionType, ProductID: productIDs[i-1], Quantity: 10, UnitPrice: 50000.0})
+		details = append(details, domain.TransactionDetail{
+			ID:              uuid.New().String(),
+			TransactionID:   transactionID,
+			TransactionType: transactionType,
+			ProductID:       productIDs[i-1],
+			Quantity:        10,
+			UnitPrice:       50000.0,
+		})
 	}
 	if err = db.Create(&details).Error; err != nil {
 		return err
@@ -122,7 +144,15 @@ func RunSeeder(db *gorm.DB) error {
 	// 10. Stock Adjustments
 	var adjustments []domain.StockAdjustment
 	for i := 1; i <= 5; i++ {
-		adjustments = append(adjustments, domain.StockAdjustment{ID: uuid.New().String(), ProductID: productIDs[i-1], WarehouseID: warehouseIDs[i-1], UserID: userIDs[i-1], OldQuantity: 100, NewQuantity: 95, Reason: "Barang rusak"})
+		adjustments = append(adjustments, domain.StockAdjustment{
+			ID:          uuid.New().String(),
+			ProductID:   productIDs[i-1],
+			WarehouseID: warehouseIDs[i-1],
+			UserID:      userIDs[i-1],
+			OldQuantity: 100,
+			NewQuantity: 95,
+			Reason:      "Barang rusak",
+		})
 	}
 	if err = db.Create(&adjustments).Error; err != nil {
 		return err

@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"stokeria/model/domain"
+	"stokeria/helper"
 	"stokeria/model/web"
 	"stokeria/repository"
 )
@@ -27,7 +27,7 @@ func (s *inventoryServiceImpl) FindById(ctx context.Context, id string) (web.Inv
 	if err != nil {
 		return web.InventoryResponse{}, err
 	}
-	return toInventoryResponse(inventory), nil
+	return helper.ToInventoryResponse(*inventory), nil
 }
 
 func (s *inventoryServiceImpl) FindAll(ctx context.Context) ([]web.InventoryResponse, error) {
@@ -38,31 +38,7 @@ func (s *inventoryServiceImpl) FindAll(ctx context.Context) ([]web.InventoryResp
 
 	var responses []web.InventoryResponse
 	for _, inventory := range inventories {
-		responses = append(responses, toInventoryResponse(&inventory))
+		responses = append(responses, helper.ToInventoryResponse(inventory))
 	}
 	return responses, nil
-}
-
-func toInventoryResponse(inventory *domain.Inventory) web.InventoryResponse {
-	response := web.InventoryResponse{
-		ID:        inventory.ID,
-		Quantity:  inventory.Quantity,
-		UpdatedAt: inventory.UpdatedAt,
-	}
-
-	if inventory.Product.ID != "" {
-		response.Product = &web.ProductResponse{
-			ID:   inventory.Product.ID,
-			Name: inventory.Product.Name,
-		}
-	}
-
-	if inventory.Warehouse.ID != "" {
-		response.Warehouse = &web.WarehouseResponse{
-			ID:   inventory.Warehouse.ID,
-			Name: inventory.Warehouse.Name,
-		}
-	}
-
-	return response
 }

@@ -31,20 +31,12 @@ func (c *categoryControllerImpl) Route(app *fiber.App) {
 func (c *categoryControllerImpl) create(ctx *fiber.Ctx) error {
 	var request web.CategoryCreateRequest
 	if err := ctx.BodyParser(&request); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
 	response, err := c.categoryService.Create(ctx.Context(), request)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(web.WebResponse{
@@ -57,22 +49,14 @@ func (c *categoryControllerImpl) create(ctx *fiber.Ctx) error {
 func (c *categoryControllerImpl) update(ctx *fiber.Ctx) error {
 	var request web.CategoryUpdateRequest
 	if err := ctx.BodyParser(&request); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
 	request.ID = ctx.Params("id")
 
 	response, err := c.categoryService.Update(ctx.Context(), request)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(web.WebResponse{
-			Code:   fiber.StatusInternalServerError,
-			Status: "INTERNAL SERVER ERROR",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -86,11 +70,7 @@ func (c *categoryControllerImpl) delete(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
 	if err := c.categoryService.Delete(ctx.Context(), id); err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(web.WebResponse{
-			Code:   fiber.StatusNotFound,
-			Status: "NOT FOUND",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -105,11 +85,7 @@ func (c *categoryControllerImpl) findById(ctx *fiber.Ctx) error {
 
 	response, err := c.categoryService.FindById(ctx.Context(), id)
 	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(web.WebResponse{
-			Code:   fiber.StatusNotFound,
-			Status: "NOT FOUND",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -122,11 +98,7 @@ func (c *categoryControllerImpl) findById(ctx *fiber.Ctx) error {
 func (c *categoryControllerImpl) findAll(ctx *fiber.Ctx) error {
 	responses, err := c.categoryService.FindAll(ctx.Context())
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(web.WebResponse{
-			Code:   fiber.StatusInternalServerError,
-			Status: "INTERNAL SERVER ERROR",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	if responses == nil {

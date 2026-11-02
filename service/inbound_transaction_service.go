@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -48,6 +49,7 @@ func (s *inboundTransactionServiceImpl) Create(ctx context.Context, request web.
 	transaction := domain.InboundTransaction{
 		ReferenceCode:   fmt.Sprintf("INB-%d", time.Now().Unix()),
 		SupplierID:      request.SupplierID,
+		WarehouseID:     request.WarehouseID,
 		UserID:          userID,
 		TransactionDate: transactionDate,
 		Status:          "COMPLETED",
@@ -76,7 +78,7 @@ func (s *inboundTransactionServiceImpl) Create(ctx context.Context, request web.
 		return web.InboundTransactionResponse{}, err
 	}
 
-	return toInboundTransactionResponse(savedTransaction, savedDetails), nil
+	return helper.ToInboundTransactionResponse(*savedTransaction, savedDetails), nil
 }
 
 func (s *inboundTransactionServiceImpl) FindById(ctx context.Context, id string) (web.InboundTransactionResponse, error) {
@@ -90,7 +92,7 @@ func (s *inboundTransactionServiceImpl) FindById(ctx context.Context, id string)
 		return web.InboundTransactionResponse{}, err
 	}
 
-	return toInboundTransactionResponse(transaction, details), nil
+	return helper.ToInboundTransactionResponse(*transaction, details), nil
 }
 
 func (s *inboundTransactionServiceImpl) FindAll(ctx context.Context) ([]web.InboundTransactionResponse, error) {
@@ -101,53 +103,7 @@ func (s *inboundTransactionServiceImpl) FindAll(ctx context.Context) ([]web.Inbo
 
 	var responses []web.InboundTransactionResponse
 	for _, transaction := range transactions {
-		// Mengirim detail nil untuk list data (mencegah N+1 query problem)
-		responses = append(responses, toInboundTransactionResponse(&transaction, nil))
+		responses = append(responses, helper.ToInboundTransactionResponse(transaction, nil))
 	}
 	return responses, nil
-}
-
-func toInboundTransactionResponse(transaction *domain.InboundTransaction, details []domain.TransactionDetail) web.InboundTransactionResponse {
-	response := web.InboundTransactionResponse{
-		ID:              transaction.ID,
-		ReferenceCode:   transaction.ReferenceCode,
-		TransactionDate: transaction.TransactionDate,
-		Status:          transaction.Status,
-		CreatedAt:       transaction.CreatedAt,
-		UpdatedAt:       transaction.UpdatedAt,
-	}
-
-	if transaction.Supplier.ID != "" {
-		response.Supplier = &web.SupplierResponse{
-			ID:   transaction.Supplier.ID,
-			Name: transaction.Supplier.Name,
-		}
-	}
-	if transaction.User.ID != "" {
-		response.User = &web.UserResponse{
-			ID:   transaction.User.ID,
-			Name: transaction.User.Name,
-		}
-	}
-
-	if len(details) > 0 {
-		var detailResponses []web.TransactionDetailResponse
-		for _, d := range details {
-			detailRes := web.TransactionDetailResponse{
-				ID:        d.ID,
-				Quantity:  d.Quantity,
-				UnitPrice: d.UnitPrice,
-			}
-			if d.Product.ID != "" {
-				detailRes.Product = &web.ProductResponse{
-					ID:   d.Product.ID,
-					Name: d.Product.Name,
-				}
-			}
-			detailResponses = append(detailResponses, detailRes)
-		}
-		response.Details = detailResponses
-	}
-
-	return response
 }

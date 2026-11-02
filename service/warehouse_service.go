@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -50,7 +51,7 @@ func (s *warehouseServiceImpl) Create(ctx context.Context, request web.Warehouse
 		return web.WarehouseResponse{}, err
 	}
 
-	return toWarehouseResponse(&warehouse), nil
+	return helper.ToWarehouseResponse(warehouse), nil
 }
 
 func (s *warehouseServiceImpl) Update(ctx context.Context, request web.WarehouseUpdateRequest) (web.WarehouseResponse, error) {
@@ -78,7 +79,7 @@ func (s *warehouseServiceImpl) Update(ctx context.Context, request web.Warehouse
 		return web.WarehouseResponse{}, err
 	}
 
-	return toWarehouseResponse(warehouse), nil
+	return helper.ToWarehouseResponse(*warehouse), nil
 }
 
 func (s *warehouseServiceImpl) Delete(ctx context.Context, id string) error {
@@ -90,7 +91,7 @@ func (s *warehouseServiceImpl) FindById(ctx context.Context, id string) (web.War
 	if err != nil {
 		return web.WarehouseResponse{}, err
 	}
-	return toWarehouseResponse(warehouse), nil
+	return helper.ToWarehouseResponse(*warehouse), nil
 }
 
 func (s *warehouseServiceImpl) FindAll(ctx context.Context) ([]web.WarehouseResponse, error) {
@@ -101,18 +102,7 @@ func (s *warehouseServiceImpl) FindAll(ctx context.Context) ([]web.WarehouseResp
 
 	var responses []web.WarehouseResponse
 	for _, warehouse := range warehouses {
-		responses = append(responses, toWarehouseResponse(&warehouse))
+		responses = append(responses, helper.ToWarehouseResponse(warehouse))
 	}
 	return responses, nil
-}
-
-func toWarehouseResponse(warehouse *domain.Warehouse) web.WarehouseResponse {
-	return web.WarehouseResponse{
-		ID:        warehouse.ID,
-		Code:      warehouse.Code,
-		Name:      warehouse.Name,
-		Address:   warehouse.Address,
-		CreatedAt: warehouse.CreatedAt,
-		UpdatedAt: warehouse.UpdatedAt,
-	}
 }

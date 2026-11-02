@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -45,7 +46,7 @@ func (s *categoryServiceImpl) Create(ctx context.Context, request web.CategoryCr
 		return web.CategoryResponse{}, err
 	}
 
-	return toCategoryResponse(&category), nil
+	return helper.ToCategoryResponse(category), nil
 }
 
 func (s *categoryServiceImpl) Update(ctx context.Context, request web.CategoryUpdateRequest) (web.CategoryResponse, error) {
@@ -67,7 +68,7 @@ func (s *categoryServiceImpl) Update(ctx context.Context, request web.CategoryUp
 		return web.CategoryResponse{}, err
 	}
 
-	return toCategoryResponse(category), nil
+	return helper.ToCategoryResponse(*category), nil
 }
 
 func (s *categoryServiceImpl) Delete(ctx context.Context, id string) error {
@@ -79,7 +80,7 @@ func (s *categoryServiceImpl) FindById(ctx context.Context, id string) (web.Cate
 	if err != nil {
 		return web.CategoryResponse{}, err
 	}
-	return toCategoryResponse(category), nil
+	return helper.ToCategoryResponse(*category), nil
 }
 
 func (s *categoryServiceImpl) FindAll(ctx context.Context) ([]web.CategoryResponse, error) {
@@ -90,17 +91,7 @@ func (s *categoryServiceImpl) FindAll(ctx context.Context) ([]web.CategoryRespon
 
 	var responses []web.CategoryResponse
 	for _, category := range categories {
-		responses = append(responses, toCategoryResponse(&category))
+		responses = append(responses, helper.ToCategoryResponse(category))
 	}
 	return responses, nil
-}
-
-func toCategoryResponse(category *domain.Category) web.CategoryResponse {
-	return web.CategoryResponse{
-		ID:          category.ID,
-		Name:        category.Name,
-		Description: category.Description,
-		CreatedAt:   category.CreatedAt,
-		UpdatedAt:   category.UpdatedAt,
-	}
 }

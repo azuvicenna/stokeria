@@ -15,14 +15,14 @@ type StockAdjustmentRepository interface {
 }
 
 type stockAdjustmentRepositoryImpl struct {
-	db *gorm.DB
+	db            *gorm.DB
+	inventoryRepo InventoryRepository
 }
 
-func NewStockAdjustmentRepository(db *gorm.DB) StockAdjustmentRepository {
-	return &stockAdjustmentRepositoryImpl{db: db}
+func NewStockAdjustmentRepository(db *gorm.DB, inventoryRepo InventoryRepository) StockAdjustmentRepository {
+	return &stockAdjustmentRepositoryImpl{db: db, inventoryRepo: inventoryRepo}
 }
 
-// Create menjalankan operasi insert StockAdjustment dan update Inventory secara atomik
 func (r *stockAdjustmentRepositoryImpl) Create(ctx context.Context, adjustment *domain.StockAdjustment) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 1. Simpan riwayat penyesuaian stok
@@ -33,30 +33,21 @@ func (r *stockAdjustmentRepositoryImpl) Create(ctx context.Context, adjustment *
 		// 2. Cari data inventory yang ada
 		var inventory domain.Inventory
 		err := tx.Where("product_id = ? AND warehouse_id = ?", adjustment.ProductID, adjustment.WarehouseID).First(&inventory).Error
-		
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				// Jika inventory belum ada, buat baru
 				inventory = domain.Inventory{
 					ProductID:   adjustment.ProductID,
 					WarehouseID: adjustment.WarehouseID,
 					Quantity:    adjustment.NewQuantity,
 				}
-				if err := tx.Create(&inventory).Error; err != nil {
-					return err
-				}
-				return nil
+				return tx.Create(&inventory).Error
 			}
 			return err
 		}
 
-		// 3. Update data inventory yang sudah ada
+		// 3. Update kuantitas stok inventory
 		inventory.Quantity = adjustment.NewQuantity
-		if err := tx.Save(&inventory).Error; err != nil {
-			return err
-		}
-
-		return nil
+		return tx.Save(&inventory).Error
 	})
 }
 

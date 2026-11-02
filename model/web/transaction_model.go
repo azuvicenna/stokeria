@@ -19,15 +19,16 @@ type TransactionDetailResponse struct {
 // Inbound Transaction
 type InboundTransactionCreateRequest struct {
 	SupplierID      string                           `validate:"required,uuid4" json:"supplier_id"`
+	WarehouseID     string                           `validate:"required,uuid4" json:"warehouse_id"`
 	TransactionDate string                           `validate:"required,datetime=2006-01-02T15:04:05Z07:00" json:"transaction_date"` // Standar RFC3339
-	// Tag dive digunakan untuk memvalidasi isi di dalam array/slice
-	Details         []TransactionDetailCreateRequest `validate:"required,min=1,dive" json:"details"` 
+	Details         []TransactionDetailCreateRequest `validate:"required,min=1,dive" json:"details"`
 }
 
 type InboundTransactionResponse struct {
 	ID              string                      `json:"id"`
 	ReferenceCode   string                      `json:"reference_code"`
 	Supplier        *SupplierResponse           `json:"supplier,omitempty"`
+	Warehouse       *WarehouseResponse          `json:"warehouse,omitempty"`
 	User            *UserResponse               `json:"user,omitempty"`
 	TransactionDate time.Time                   `json:"transaction_date"`
 	Status          string                      `json:"status"`
@@ -38,6 +39,7 @@ type InboundTransactionResponse struct {
 
 // Outbound Transaction
 type OutboundTransactionCreateRequest struct {
+	WarehouseID     string                           `validate:"required,uuid4" json:"warehouse_id"`
 	Destination     string                           `validate:"required,max=255" json:"destination"`
 	TransactionDate string                           `validate:"required,datetime=2006-01-02T15:04:05Z07:00" json:"transaction_date"`
 	Details         []TransactionDetailCreateRequest `validate:"required,min=1,dive" json:"details"`
@@ -46,6 +48,7 @@ type OutboundTransactionCreateRequest struct {
 type OutboundTransactionResponse struct {
 	ID              string                      `json:"id"`
 	ReferenceCode   string                      `json:"reference_code"`
+	Warehouse       *WarehouseResponse          `json:"warehouse,omitempty"`
 	Destination     string                      `json:"destination"`
 	User            *UserResponse               `json:"user,omitempty"`
 	TransactionDate time.Time                   `json:"transaction_date"`

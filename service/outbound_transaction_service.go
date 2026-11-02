@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -47,6 +48,7 @@ func (s *outboundTransactionServiceImpl) Create(ctx context.Context, request web
 
 	transaction := domain.OutboundTransaction{
 		ReferenceCode:   fmt.Sprintf("OUT-%d", time.Now().Unix()),
+		WarehouseID:     request.WarehouseID,
 		Destination:     request.Destination,
 		UserID:          userID,
 		TransactionDate: transactionDate,
@@ -76,7 +78,7 @@ func (s *outboundTransactionServiceImpl) Create(ctx context.Context, request web
 		return web.OutboundTransactionResponse{}, err
 	}
 
-	return toOutboundTransactionResponse(savedTransaction, savedDetails), nil
+	return helper.ToOutboundTransactionResponse(*savedTransaction, savedDetails), nil
 }
 
 func (s *outboundTransactionServiceImpl) FindById(ctx context.Context, id string) (web.OutboundTransactionResponse, error) {
@@ -90,7 +92,7 @@ func (s *outboundTransactionServiceImpl) FindById(ctx context.Context, id string
 		return web.OutboundTransactionResponse{}, err
 	}
 
-	return toOutboundTransactionResponse(transaction, details), nil
+	return helper.ToOutboundTransactionResponse(*transaction, details), nil
 }
 
 func (s *outboundTransactionServiceImpl) FindAll(ctx context.Context) ([]web.OutboundTransactionResponse, error) {
@@ -101,47 +103,7 @@ func (s *outboundTransactionServiceImpl) FindAll(ctx context.Context) ([]web.Out
 
 	var responses []web.OutboundTransactionResponse
 	for _, transaction := range transactions {
-		responses = append(responses, toOutboundTransactionResponse(&transaction, nil))
+		responses = append(responses, helper.ToOutboundTransactionResponse(transaction, nil))
 	}
 	return responses, nil
-}
-
-func toOutboundTransactionResponse(transaction *domain.OutboundTransaction, details []domain.TransactionDetail) web.OutboundTransactionResponse {
-	response := web.OutboundTransactionResponse{
-		ID:              transaction.ID,
-		ReferenceCode:   transaction.ReferenceCode,
-		Destination:     transaction.Destination,
-		TransactionDate: transaction.TransactionDate,
-		Status:          transaction.Status,
-		CreatedAt:       transaction.CreatedAt,
-		UpdatedAt:       transaction.UpdatedAt,
-	}
-
-	if transaction.User.ID != "" {
-		response.User = &web.UserResponse{
-			ID:   transaction.User.ID,
-			Name: transaction.User.Name,
-		}
-	}
-
-	if len(details) > 0 {
-		var detailResponses []web.TransactionDetailResponse
-		for _, d := range details {
-			detailRes := web.TransactionDetailResponse{
-				ID:        d.ID,
-				Quantity:  d.Quantity,
-				UnitPrice: d.UnitPrice,
-			}
-			if d.Product.ID != "" {
-				detailRes.Product = &web.ProductResponse{
-					ID:   d.Product.ID,
-					Name: d.Product.Name,
-				}
-			}
-			detailResponses = append(detailResponses, detailRes)
-		}
-		response.Details = detailResponses
-	}
-
-	return response
 }

@@ -134,6 +134,10 @@ func ToInboundTransactionResponse(trx domain.InboundTransaction, details []domai
 		supplierResp := ToSupplierResponse(trx.Supplier)
 		response.Supplier = &supplierResp
 	}
+	if trx.Warehouse.ID != "" {
+		warehouseResp := ToWarehouseResponse(trx.Warehouse)
+		response.Warehouse = &warehouseResp
+	}
 	if trx.User.ID != "" {
 		userResp := ToUserResponse(trx.User)
 		response.User = &userResp
@@ -154,6 +158,10 @@ func ToOutboundTransactionResponse(trx domain.OutboundTransaction, details []dom
 		Details:         ToTransactionDetailResponses(details),
 	}
 
+	if trx.Warehouse.ID != "" {
+		warehouseResp := ToWarehouseResponse(trx.Warehouse)
+		response.Warehouse = &warehouseResp
+	}
 	if trx.User.ID != "" {
 		userResp := ToUserResponse(trx.User)
 		response.User = &userResp

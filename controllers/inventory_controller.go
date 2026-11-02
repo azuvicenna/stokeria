@@ -30,11 +30,7 @@ func (c *inventoryControllerImpl) findById(ctx *fiber.Ctx) error {
 
 	response, err := c.inventoryService.FindById(ctx.Context(), id)
 	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(web.WebResponse{
-			Code:   fiber.StatusNotFound,
-			Status: "NOT FOUND",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -47,11 +43,7 @@ func (c *inventoryControllerImpl) findById(ctx *fiber.Ctx) error {
 func (c *inventoryControllerImpl) findAll(ctx *fiber.Ctx) error {
 	responses, err := c.inventoryService.FindAll(ctx.Context())
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(web.WebResponse{
-			Code:   fiber.StatusInternalServerError,
-			Status: "INTERNAL SERVER ERROR",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	if responses == nil {

@@ -29,38 +29,24 @@ func (c *inboundTransactionControllerImpl) Route(app *fiber.App) {
 func (c *inboundTransactionControllerImpl) create(ctx *fiber.Ctx) error {
 	var request web.InboundTransactionCreateRequest
 	if err := ctx.BodyParser(&request); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
 	userIDValue := ctx.Locals("user_id")
-	if userIDValue == nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(web.WebResponse{
-			Code:   fiber.StatusUnauthorized,
-			Status: "UNAUTHORIZED",
-			Errors: "user id not found in context",
-		})
+	var userID string
+	if userIDValue != nil {
+		userID, _ = userIDValue.(string)
 	}
-
-	userID, ok := userIDValue.(string)
-	if !ok || userID == "" {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(web.WebResponse{
-			Code:   fiber.StatusUnauthorized,
-			Status: "UNAUTHORIZED",
-			Errors: "invalid user id format",
-		})
+	if userID == "" {
+		userID = ctx.Get("X-User-Id")
+	}
+	if userID == "" {
+		return fiber.NewError(fiber.StatusUnauthorized, "user id not found in context or X-User-Id header")
 	}
 
 	response, err := c.inboundTransactionService.Create(ctx.Context(), request, userID)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(web.WebResponse{
@@ -75,11 +61,7 @@ func (c *inboundTransactionControllerImpl) findById(ctx *fiber.Ctx) error {
 
 	response, err := c.inboundTransactionService.FindById(ctx.Context(), id)
 	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(web.WebResponse{
-			Code:   fiber.StatusNotFound,
-			Status: "NOT FOUND",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -92,11 +74,7 @@ func (c *inboundTransactionControllerImpl) findById(ctx *fiber.Ctx) error {
 func (c *inboundTransactionControllerImpl) findAll(ctx *fiber.Ctx) error {
 	responses, err := c.inboundTransactionService.FindAll(ctx.Context())
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(web.WebResponse{
-			Code:   fiber.StatusInternalServerError,
-			Status: "INTERNAL SERVER ERROR",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	if responses == nil {

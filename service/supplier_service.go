@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -47,7 +48,7 @@ func (s *supplierServiceImpl) Create(ctx context.Context, request web.SupplierCr
 		return web.SupplierResponse{}, err
 	}
 
-	return toSupplierResponse(&supplier), nil
+	return helper.ToSupplierResponse(supplier), nil
 }
 
 func (s *supplierServiceImpl) Update(ctx context.Context, request web.SupplierUpdateRequest) (web.SupplierResponse, error) {
@@ -71,7 +72,7 @@ func (s *supplierServiceImpl) Update(ctx context.Context, request web.SupplierUp
 		return web.SupplierResponse{}, err
 	}
 
-	return toSupplierResponse(supplier), nil
+	return helper.ToSupplierResponse(*supplier), nil
 }
 
 func (s *supplierServiceImpl) Delete(ctx context.Context, id string) error {
@@ -83,7 +84,7 @@ func (s *supplierServiceImpl) FindById(ctx context.Context, id string) (web.Supp
 	if err != nil {
 		return web.SupplierResponse{}, err
 	}
-	return toSupplierResponse(supplier), nil
+	return helper.ToSupplierResponse(*supplier), nil
 }
 
 func (s *supplierServiceImpl) FindAll(ctx context.Context) ([]web.SupplierResponse, error) {
@@ -94,19 +95,7 @@ func (s *supplierServiceImpl) FindAll(ctx context.Context) ([]web.SupplierRespon
 
 	var responses []web.SupplierResponse
 	for _, supplier := range suppliers {
-		responses = append(responses, toSupplierResponse(&supplier))
+		responses = append(responses, helper.ToSupplierResponse(supplier))
 	}
 	return responses, nil
-}
-
-func toSupplierResponse(supplier *domain.Supplier) web.SupplierResponse {
-	return web.SupplierResponse{
-		ID:            supplier.ID,
-		Name:          supplier.Name,
-		ContactPerson: supplier.ContactPerson,
-		Phone:         supplier.Phone,
-		Address:       supplier.Address,
-		CreatedAt:     supplier.CreatedAt,
-		UpdatedAt:     supplier.UpdatedAt,
-	}
 }

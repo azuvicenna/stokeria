@@ -2,6 +2,7 @@ package domain
 
 import (
 	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -9,6 +10,7 @@ import (
 type OutboundTransaction struct {
 	ID              string    `gorm:"type:char(36);primaryKey"`
 	ReferenceCode   string    `gorm:"type:varchar(100);unique;not null"`
+	WarehouseID     string    `gorm:"type:char(36);not null"`
 	Destination     string    `gorm:"type:varchar(255);not null"`
 	UserID          string    `gorm:"type:char(36);not null"`
 	TransactionDate time.Time `gorm:"type:timestamp;not null"`
@@ -17,7 +19,8 @@ type OutboundTransaction struct {
 	UpdatedAt       time.Time `gorm:"autoUpdateTime"`
 
 	// Relasi Belongs To
-	User User `gorm:"foreignKey:UserID;references:ID"`
+	Warehouse Warehouse `gorm:"foreignKey:WarehouseID;references:ID"`
+	User      User      `gorm:"foreignKey:UserID;references:ID"`
 }
 
 func (o *OutboundTransaction) BeforeCreate(tx *gorm.DB) (err error) {

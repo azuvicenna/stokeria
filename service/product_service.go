@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -47,13 +48,12 @@ func (s *productServiceImpl) Create(ctx context.Context, request web.ProductCrea
 		return web.ProductResponse{}, err
 	}
 
-	// Ambil ulang dari database untuk mendapatkan relasi Category
 	savedProduct, err := s.productRepository.FindById(ctx, product.ID)
 	if err != nil {
 		return web.ProductResponse{}, err
 	}
 
-	return toProductResponse(savedProduct), nil
+	return helper.ToProductResponse(*savedProduct), nil
 }
 
 func (s *productServiceImpl) Update(ctx context.Context, request web.ProductUpdateRequest) (web.ProductResponse, error) {
@@ -77,13 +77,12 @@ func (s *productServiceImpl) Update(ctx context.Context, request web.ProductUpda
 		return web.ProductResponse{}, err
 	}
 
-	// Ambil ulang untuk memastikan data relasi Category ter-update jika CategoryID berubah
 	updatedProduct, err := s.productRepository.FindById(ctx, product.ID)
 	if err != nil {
 		return web.ProductResponse{}, err
 	}
 
-	return toProductResponse(updatedProduct), nil
+	return helper.ToProductResponse(*updatedProduct), nil
 }
 
 func (s *productServiceImpl) Delete(ctx context.Context, id string) error {
@@ -95,7 +94,7 @@ func (s *productServiceImpl) FindById(ctx context.Context, id string) (web.Produ
 	if err != nil {
 		return web.ProductResponse{}, err
 	}
-	return toProductResponse(product), nil
+	return helper.ToProductResponse(*product), nil
 }
 
 func (s *productServiceImpl) FindAll(ctx context.Context) ([]web.ProductResponse, error) {
@@ -104,32 +103,5 @@ func (s *productServiceImpl) FindAll(ctx context.Context) ([]web.ProductResponse
 		return nil, err
 	}
 
-	var responses []web.ProductResponse
-	for _, product := range products {
-		responses = append(responses, toProductResponse(&product))
-	}
-	return responses, nil
-}
-
-func toProductResponse(product *domain.Product) web.ProductResponse {
-	response := web.ProductResponse{
-		ID:        product.ID,
-		SKU:       product.SKU,
-		Name:      product.Name,
-		Price:     product.Price,
-		CreatedAt: product.CreatedAt,
-		UpdatedAt: product.UpdatedAt,
-	}
-
-	if product.Category.ID != "" {
-		response.Category = &web.CategoryResponse{
-			ID:          product.Category.ID,
-			Name:        product.Category.Name,
-			Description: product.Category.Description,
-			CreatedAt:   product.Category.CreatedAt,
-			UpdatedAt:   product.Category.UpdatedAt,
-		}
-	}
-
-	return response
+	return helper.ToProductResponses(products), nil
 }

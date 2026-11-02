@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -52,7 +53,7 @@ func (s *stockAdjustmentServiceImpl) Create(ctx context.Context, request web.Sto
 		return web.StockAdjustmentResponse{}, err
 	}
 
-	return toStockAdjustmentResponse(savedAdjustment), nil
+	return helper.ToStockAdjustmentResponse(*savedAdjustment), nil
 }
 
 func (s *stockAdjustmentServiceImpl) FindById(ctx context.Context, id string) (web.StockAdjustmentResponse, error) {
@@ -60,7 +61,7 @@ func (s *stockAdjustmentServiceImpl) FindById(ctx context.Context, id string) (w
 	if err != nil {
 		return web.StockAdjustmentResponse{}, err
 	}
-	return toStockAdjustmentResponse(adjustment), nil
+	return helper.ToStockAdjustmentResponse(*adjustment), nil
 }
 
 func (s *stockAdjustmentServiceImpl) FindAll(ctx context.Context) ([]web.StockAdjustmentResponse, error) {
@@ -71,40 +72,7 @@ func (s *stockAdjustmentServiceImpl) FindAll(ctx context.Context) ([]web.StockAd
 
 	var responses []web.StockAdjustmentResponse
 	for _, adjustment := range adjustments {
-		responses = append(responses, toStockAdjustmentResponse(&adjustment))
+		responses = append(responses, helper.ToStockAdjustmentResponse(adjustment))
 	}
 	return responses, nil
-}
-
-func toStockAdjustmentResponse(adjustment *domain.StockAdjustment) web.StockAdjustmentResponse {
-	response := web.StockAdjustmentResponse{
-		ID:          adjustment.ID,
-		OldQuantity: adjustment.OldQuantity,
-		NewQuantity: adjustment.NewQuantity,
-		Reason:      adjustment.Reason,
-		CreatedAt:   adjustment.CreatedAt,
-	}
-
-	if adjustment.Product.ID != "" {
-		response.Product = &web.ProductResponse{
-			ID:   adjustment.Product.ID,
-			Name: adjustment.Product.Name,
-		}
-	}
-
-	if adjustment.Warehouse.ID != "" {
-		response.Warehouse = &web.WarehouseResponse{
-			ID:   adjustment.Warehouse.ID,
-			Name: adjustment.Warehouse.Name,
-		}
-	}
-
-	if adjustment.User.ID != "" {
-		response.User = &web.UserResponse{
-			ID:   adjustment.User.ID,
-			Name: adjustment.User.Name,
-		}
-	}
-
-	return response
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"stokeria/helper"
 	"stokeria/model/domain"
 	"stokeria/model/web"
 	"stokeria/repository"
@@ -17,7 +18,7 @@ type UserService interface {
 	Delete(ctx context.Context, id string) error
 	FindById(ctx context.Context, id string) (web.UserResponse, error)
 	FindAll(ctx context.Context) ([]web.UserResponse, error)
-	Login(ctx context.Context, request web.UserLoginRequest) (web.UserResponse, error) // Bisa dimodifikasi untuk mengembalikan token JWT
+	Login(ctx context.Context, request web.UserLoginRequest) (web.UserResponse, error)
 }
 
 type userServiceImpl struct {
@@ -37,7 +38,6 @@ func (s *userServiceImpl) Create(ctx context.Context, request web.UserCreateRequ
 		return web.UserResponse{}, err
 	}
 
-	// Periksa apakah email sudah digunakan
 	existingUser, _ := s.userRepository.FindByEmail(ctx, request.Email)
 	if existingUser != nil {
 		return web.UserResponse{}, errors.New("email already exists")
@@ -59,7 +59,7 @@ func (s *userServiceImpl) Create(ctx context.Context, request web.UserCreateRequ
 		return web.UserResponse{}, err
 	}
 
-	return toUserResponse(&user), nil
+	return helper.ToUserResponse(user), nil
 }
 
 func (s *userServiceImpl) Update(ctx context.Context, request web.UserUpdateRequest) (web.UserResponse, error) {
@@ -72,7 +72,6 @@ func (s *userServiceImpl) Update(ctx context.Context, request web.UserUpdateRequ
 		return web.UserResponse{}, err
 	}
 
-	// Periksa jika email diubah, apakah sudah dipakai pengguna lain
 	if user.Email != request.Email {
 		existingUser, _ := s.userRepository.FindByEmail(ctx, request.Email)
 		if existingUser != nil {
@@ -88,7 +87,7 @@ func (s *userServiceImpl) Update(ctx context.Context, request web.UserUpdateRequ
 		return web.UserResponse{}, err
 	}
 
-	return toUserResponse(user), nil
+	return helper.ToUserResponse(*user), nil
 }
 
 func (s *userServiceImpl) Delete(ctx context.Context, id string) error {
@@ -100,7 +99,7 @@ func (s *userServiceImpl) FindById(ctx context.Context, id string) (web.UserResp
 	if err != nil {
 		return web.UserResponse{}, err
 	}
-	return toUserResponse(user), nil
+	return helper.ToUserResponse(*user), nil
 }
 
 func (s *userServiceImpl) FindAll(ctx context.Context) ([]web.UserResponse, error) {
@@ -111,7 +110,7 @@ func (s *userServiceImpl) FindAll(ctx context.Context) ([]web.UserResponse, erro
 
 	var responses []web.UserResponse
 	for _, user := range users {
-		responses = append(responses, toUserResponse(&user))
+		responses = append(responses, helper.ToUserResponse(user))
 	}
 	return responses, nil
 }
@@ -123,7 +122,7 @@ func (s *userServiceImpl) Login(ctx context.Context, request web.UserLoginReques
 
 	user, err := s.userRepository.FindByEmail(ctx, request.Email)
 	if err != nil {
-		return web.UserResponse{}, errors.New("invalid email or password") // Gunakan pesan ambigu untuk keamanan
+		return web.UserResponse{}, errors.New("invalid email or password")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
@@ -131,16 +130,5 @@ func (s *userServiceImpl) Login(ctx context.Context, request web.UserLoginReques
 		return web.UserResponse{}, errors.New("invalid email or password")
 	}
 
-	return toUserResponse(user), nil
-}
-
-func toUserResponse(user *domain.User) web.UserResponse {
-	return web.UserResponse{
-		ID:        user.ID,
-		Email:     user.Email,
-		Name:      user.Name,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-	}
+	return helper.ToUserResponse(*user), nil
 }

@@ -6,9 +6,11 @@ import (
 	"stokeria/exception"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
-func main(){
+func main() {
 	viperConfig := app.NewViper()
 	logrusLogger := app.NewLogrus()
 	gormDB := app.NewDatabase(viperConfig, logrusLogger)
@@ -28,6 +30,14 @@ func main(){
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: exception.ErrorHandler,
 	})
+
+	// Middleware Global
+	fiberApp.Use(recover.New())
+	fiberApp.Use(logger.New(logger.Config{
+		Format:     "[${time}] ${status} - ${latency} | ${method} ${path}\n",
+		TimeFormat: "2006-01-02 15:04:05",
+		TimeZone:   "Asia/Jakarta",
+	}))
 
 	app.SetupRouter(fiberApp, gormDB, goValidator, logrusLogger)
 

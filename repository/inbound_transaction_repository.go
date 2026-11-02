@@ -15,11 +15,21 @@ type InboundTransactionRepository interface {
 }
 
 type inboundTransactionRepositoryImpl struct {
-	db *gorm.DB
+	db            *gorm.DB
+	detailRepo    TransactionDetailRepository
+	inventoryRepo InventoryRepository
 }
 
-func NewInboundTransactionRepository(db *gorm.DB) InboundTransactionRepository {
-	return &inboundTransactionRepositoryImpl{db: db}
+func NewInboundTransactionRepository(
+	db *gorm.DB,
+	detailRepo TransactionDetailRepository,
+	inventoryRepo InventoryRepository,
+) InboundTransactionRepository {
+	return &inboundTransactionRepositoryImpl{
+		db:            db,
+		detailRepo:    detailRepo,
+		inventoryRepo: inventoryRepo,
+	}
 }
 
 func (r *inboundTransactionRepositoryImpl) Create(ctx context.Context, transaction *domain.InboundTransaction, details []domain.TransactionDetail) error {
@@ -29,14 +39,19 @@ func (r *inboundTransactionRepositoryImpl) Create(ctx context.Context, transacti
 			return err
 		}
 
-		// 2. Assign TransactionID dan TransactionType ke masing-masing Detail
+		// 2. Assign TransactionID dan TransactionType ke masing-masing Detail & Mutasi Stok Inventory
 		for i := range details {
 			details[i].TransactionID = transaction.ID
 			details[i].TransactionType = "INBOUND"
+
+			// Tambah stok ke gudang terkait
+			if _, err := r.inventoryRepo.MutateStock(ctx, tx, details[i].ProductID, transaction.WarehouseID, details[i].Quantity); err != nil {
+				return err
+			}
 		}
 
-		// 3. Simpan Details secara Bulk Insert
-		if err := tx.Create(&details).Error; err != nil {
+		// 3. Simpan Details menggunakan CreateMany
+		if err := r.detailRepo.CreateMany(ctx, tx, details); err != nil {
 			return err
 		}
 
@@ -48,6 +63,7 @@ func (r *inboundTransactionRepositoryImpl) FindById(ctx context.Context, id stri
 	var transaction domain.InboundTransaction
 	err := r.db.WithContext(ctx).
 		Preload("Supplier").
+		Preload("Warehouse").
 		Preload("User").
 		First(&transaction, "id = ?", id).Error
 
@@ -64,6 +80,7 @@ func (r *inboundTransactionRepositoryImpl) FindAll(ctx context.Context) ([]domai
 	var transactions []domain.InboundTransaction
 	err := r.db.WithContext(ctx).
 		Preload("Supplier").
+		Preload("Warehouse").
 		Preload("User").
 		Find(&transactions).Error
 

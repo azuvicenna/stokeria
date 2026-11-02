@@ -15,11 +15,21 @@ type OutboundTransactionRepository interface {
 }
 
 type outboundTransactionRepositoryImpl struct {
-	db *gorm.DB
+	db            *gorm.DB
+	detailRepo    TransactionDetailRepository
+	inventoryRepo InventoryRepository
 }
 
-func NewOutboundTransactionRepository(db *gorm.DB) OutboundTransactionRepository {
-	return &outboundTransactionRepositoryImpl{db: db}
+func NewOutboundTransactionRepository(
+	db *gorm.DB,
+	detailRepo TransactionDetailRepository,
+	inventoryRepo InventoryRepository,
+) OutboundTransactionRepository {
+	return &outboundTransactionRepositoryImpl{
+		db:            db,
+		detailRepo:    detailRepo,
+		inventoryRepo: inventoryRepo,
+	}
 }
 
 func (r *outboundTransactionRepositoryImpl) Create(ctx context.Context, transaction *domain.OutboundTransaction, details []domain.TransactionDetail) error {
@@ -31,9 +41,15 @@ func (r *outboundTransactionRepositoryImpl) Create(ctx context.Context, transact
 		for i := range details {
 			details[i].TransactionID = transaction.ID
 			details[i].TransactionType = "OUTBOUND"
+
+			// Kurangi stok dari gudang terkait (negatif), validasi otomatis terjadi di MutateStock
+			if _, err := r.inventoryRepo.MutateStock(ctx, tx, details[i].ProductID, transaction.WarehouseID, -details[i].Quantity); err != nil {
+				return err
+			}
 		}
 
-		if err := tx.Create(&details).Error; err != nil {
+		// Simpan detail transaksi menggunakan CreateMany
+		if err := r.detailRepo.CreateMany(ctx, tx, details); err != nil {
 			return err
 		}
 
@@ -44,6 +60,7 @@ func (r *outboundTransactionRepositoryImpl) Create(ctx context.Context, transact
 func (r *outboundTransactionRepositoryImpl) FindById(ctx context.Context, id string) (*domain.OutboundTransaction, error) {
 	var transaction domain.OutboundTransaction
 	err := r.db.WithContext(ctx).
+		Preload("Warehouse").
 		Preload("User").
 		First(&transaction, "id = ?", id).Error
 
@@ -59,6 +76,7 @@ func (r *outboundTransactionRepositoryImpl) FindById(ctx context.Context, id str
 func (r *outboundTransactionRepositoryImpl) FindAll(ctx context.Context) ([]domain.OutboundTransaction, error) {
 	var transactions []domain.OutboundTransaction
 	err := r.db.WithContext(ctx).
+		Preload("Warehouse").
 		Preload("User").
 		Find(&transactions).Error
 

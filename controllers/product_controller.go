@@ -31,20 +31,12 @@ func (c *productControllerImpl) Route(app *fiber.App) {
 func (c *productControllerImpl) create(ctx *fiber.Ctx) error {
 	var request web.ProductCreateRequest
 	if err := ctx.BodyParser(&request); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
 	response, err := c.productService.Create(ctx.Context(), request)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(web.WebResponse{
@@ -57,22 +49,14 @@ func (c *productControllerImpl) create(ctx *fiber.Ctx) error {
 func (c *productControllerImpl) update(ctx *fiber.Ctx) error {
 	var request web.ProductUpdateRequest
 	if err := ctx.BodyParser(&request); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(web.WebResponse{
-			Code:   fiber.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Errors: err.Error(),
-		})
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
 	request.ID = ctx.Params("id")
 
 	response, err := c.productService.Update(ctx.Context(), request)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(web.WebResponse{
-			Code:   fiber.StatusInternalServerError,
-			Status: "INTERNAL SERVER ERROR",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -86,11 +70,7 @@ func (c *productControllerImpl) delete(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
 	if err := c.productService.Delete(ctx.Context(), id); err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(web.WebResponse{
-			Code:   fiber.StatusNotFound,
-			Status: "NOT FOUND",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -105,11 +85,7 @@ func (c *productControllerImpl) findById(ctx *fiber.Ctx) error {
 
 	response, err := c.productService.FindById(ctx.Context(), id)
 	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(web.WebResponse{
-			Code:   fiber.StatusNotFound,
-			Status: "NOT FOUND",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(web.WebResponse{
@@ -122,11 +98,7 @@ func (c *productControllerImpl) findById(ctx *fiber.Ctx) error {
 func (c *productControllerImpl) findAll(ctx *fiber.Ctx) error {
 	responses, err := c.productService.FindAll(ctx.Context())
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(web.WebResponse{
-			Code:   fiber.StatusInternalServerError,
-			Status: "INTERNAL SERVER ERROR",
-			Errors: err.Error(),
-		})
+		return err
 	}
 
 	if responses == nil {
