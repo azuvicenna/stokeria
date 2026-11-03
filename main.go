@@ -39,7 +39,7 @@ func main() {
 		TimeZone:   "Asia/Jakarta",
 	}))
 
-	app.SetupRouter(fiberApp, gormDB, goValidator, logrusLogger)
+	app.SetupRouter(fiberApp, gormDB, goValidator, logrusLogger, viperConfig)
 
 	appPort := viperConfig.GetString("APP_PORT")
 	if appPort == "" {

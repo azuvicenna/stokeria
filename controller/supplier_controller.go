@@ -8,7 +8,7 @@ import (
 )
 
 type SupplierController interface {
-	Route(app *fiber.App)
+	Route(app *fiber.App, authMiddleware ...fiber.Handler)
 }
 
 type supplierControllerImpl struct {
@@ -19,8 +19,11 @@ func NewSupplierController(supplierService service.SupplierService) SupplierCont
 	return &supplierControllerImpl{supplierService: supplierService}
 }
 
-func (c *supplierControllerImpl) Route(app *fiber.App) {
+func (c *supplierControllerImpl) Route(app *fiber.App, authMiddleware ...fiber.Handler) {
 	group := app.Group("/api/suppliers")
+	for _, mw := range authMiddleware {
+		group.Use(mw)
+	}
 	group.Post("/", c.create)
 	group.Get("/", c.findAll)
 	group.Get("/:id", c.findById)

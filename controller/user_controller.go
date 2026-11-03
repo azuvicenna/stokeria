@@ -8,7 +8,7 @@ import (
 )
 
 type UserController interface {
-	Route(app *fiber.App)
+	Route(app *fiber.App, authMiddleware ...fiber.Handler)
 }
 
 type userControllerImpl struct {
@@ -19,15 +19,20 @@ func NewUserController(userService service.UserService) UserController {
 	return &userControllerImpl{userService: userService}
 }
 
-func (c *userControllerImpl) Route(app *fiber.App) {
+func (c *userControllerImpl) Route(app *fiber.App, authMiddleware ...fiber.Handler) {
+	// 1. Endpoint publik untuk login
+	app.Post("/api/login", c.login)
+
+	// 2. Endpoint manajemen users (terproteksi jika authMiddleware diberikan)
 	group := app.Group("/api/users")
+	for _, mw := range authMiddleware {
+		group.Use(mw)
+	}
 	group.Post("/", c.create)
 	group.Get("/", c.findAll)
 	group.Get("/:id", c.findById)
 	group.Put("/:id", c.update)
 	group.Delete("/:id", c.delete)
-
-	app.Post("/api/login", c.login)
 }
 
 func (c *userControllerImpl) create(ctx *fiber.Ctx) error {

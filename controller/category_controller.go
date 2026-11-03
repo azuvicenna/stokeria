@@ -8,7 +8,7 @@ import (
 )
 
 type CategoryController interface {
-	Route(app *fiber.App)
+	Route(app *fiber.App, authMiddleware ...fiber.Handler)
 }
 
 type categoryControllerImpl struct {
@@ -19,8 +19,11 @@ func NewCategoryController(categoryService service.CategoryService) CategoryCont
 	return &categoryControllerImpl{categoryService: categoryService}
 }
 
-func (c *categoryControllerImpl) Route(app *fiber.App) {
+func (c *categoryControllerImpl) Route(app *fiber.App, authMiddleware ...fiber.Handler) {
 	group := app.Group("/api/categories")
+	for _, mw := range authMiddleware {
+		group.Use(mw)
+	}
 	group.Post("/", c.create)
 	group.Get("/", c.findAll)
 	group.Get("/:id", c.findById)

@@ -8,7 +8,7 @@ import (
 )
 
 type OutboundTransactionController interface {
-	Route(app *fiber.App)
+	Route(app *fiber.App, authMiddleware ...fiber.Handler)
 }
 
 type outboundTransactionControllerImpl struct {
@@ -19,8 +19,11 @@ func NewOutboundTransactionController(outboundTransactionService service.Outboun
 	return &outboundTransactionControllerImpl{outboundTransactionService: outboundTransactionService}
 }
 
-func (c *outboundTransactionControllerImpl) Route(app *fiber.App) {
+func (c *outboundTransactionControllerImpl) Route(app *fiber.App, authMiddleware ...fiber.Handler) {
 	group := app.Group("/api/outbound-transactions")
+	for _, mw := range authMiddleware {
+		group.Use(mw)
+	}
 	group.Post("/", c.create)
 	group.Get("/", c.findAll)
 	group.Get("/:id", c.findById)

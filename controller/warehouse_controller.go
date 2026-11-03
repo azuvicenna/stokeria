@@ -8,7 +8,7 @@ import (
 )
 
 type WarehouseController interface {
-	Route(app *fiber.App)
+	Route(app *fiber.App, authMiddleware ...fiber.Handler)
 }
 
 type warehouseControllerImpl struct {
@@ -19,8 +19,11 @@ func NewWarehouseController(warehouseService service.WarehouseService) Warehouse
 	return &warehouseControllerImpl{warehouseService: warehouseService}
 }
 
-func (c *warehouseControllerImpl) Route(app *fiber.App) {
+func (c *warehouseControllerImpl) Route(app *fiber.App, authMiddleware ...fiber.Handler) {
 	group := app.Group("/api/warehouses")
+	for _, mw := range authMiddleware {
+		group.Use(mw)
+	}
 	group.Post("/", c.create)
 	group.Get("/", c.findAll)
 	group.Get("/:id", c.findById)

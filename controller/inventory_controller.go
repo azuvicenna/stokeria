@@ -8,7 +8,7 @@ import (
 )
 
 type InventoryController interface {
-	Route(app *fiber.App)
+	Route(app *fiber.App, authMiddleware ...fiber.Handler)
 }
 
 type inventoryControllerImpl struct {
@@ -19,8 +19,11 @@ func NewInventoryController(inventoryService service.InventoryService) Inventory
 	return &inventoryControllerImpl{inventoryService: inventoryService}
 }
 
-func (c *inventoryControllerImpl) Route(app *fiber.App) {
+func (c *inventoryControllerImpl) Route(app *fiber.App, authMiddleware ...fiber.Handler) {
 	group := app.Group("/api/inventories")
+	for _, mw := range authMiddleware {
+		group.Use(mw)
+	}
 	group.Get("/", c.findAll)
 	group.Get("/:id", c.findById)
 }

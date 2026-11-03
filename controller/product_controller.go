@@ -8,7 +8,7 @@ import (
 )
 
 type ProductController interface {
-	Route(app *fiber.App)
+	Route(app *fiber.App, authMiddleware ...fiber.Handler)
 }
 
 type productControllerImpl struct {
@@ -19,8 +19,11 @@ func NewProductController(productService service.ProductService) ProductControll
 	return &productControllerImpl{productService: productService}
 }
 
-func (c *productControllerImpl) Route(app *fiber.App) {
+func (c *productControllerImpl) Route(app *fiber.App, authMiddleware ...fiber.Handler) {
 	group := app.Group("/api/products")
+	for _, mw := range authMiddleware {
+		group.Use(mw)
+	}
 	group.Post("/", c.create)
 	group.Get("/", c.findAll)
 	group.Get("/:id", c.findById)
